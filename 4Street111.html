@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DBC Gift Card Helper</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #4fe6e4;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #ef7e85;
+      color: blue-purple;
+      text-align: center;
+      padding: 1rem;
+      font-size: 1.5rem;
+    }
+    nav {
+      display: flex;
+      background: #e0f79f;
+    }
+    nav button {
+      flex: 1;
+      padding: 1rem;
+      background: transparent;
+      border: none;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    nav button.active {
+      background: #f056f1;
+      color: purple;
+      font-weight: bold;
+    }
+    .tab {
+      display: none;
+      padding: 1.5rem;
+    }
+    .tab.active {
+      display: block;
+    }
+    .card {
+      background:gold;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    input, select, button {
+      margin-top: 0.5rem;
+      padding: 0.5rem;
+      font-size: 1rem;
+      width: 100%;
+    }
+    button.action {
+      background: #4fe6e5;
+      color: peach;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .result-box {
+      margin-top: 1rem;
+      background: #f3f4f6;
+      padding: 1rem;
+      border-radius: 8px;
+      font-family: monospace;
+    }
+    a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <header>🎁 DBC Gift Cards Helper</header>
+
+  <nav>
+    <button class="tab-btn active" data-tab="scan">Scan To Fix Card</button>
+    <button class="tab-btn" data-tab="balance">Check card Balance</button>
+    <button class="tab-btn" data-tab="help">Help & Support</button>
+  </nav>
+
+  <!-- Scan Damaged Tab -->
+  <div id="scan" class="tab active">
+    <div class="card">
+      <div id>Scan To Fix Scratched codes</div>
+      <p>Upload a picture of your scratched or damaged card to try and recover the code.</p>
+      <input type="file" id="scanInput" accept="image/*"/>
+      <button class="action" onclick="scanCard()">🔍 Scan Now</button>
+      <div id="scanResult" class="result-box"></div>
+    </div>
+  </div>
+
+  <!-- Check Balance Tab -->
+  <div id="balance" class="tab">
+    <div class="card">
+      <div>Check Gift Card Balance</div>
+      <label for="cardType">Select Gift Card Type:</label>
+      
+      <select id="cardType">
+        <option value="amazon">Amazon</option>
+        <option value="itunes">Apple / iTunes</option>
+        <option value="google">Google Play</option>
+        <option value="xbox">Xbox</option>
+        <option value="playstation">PlayStation</option>
+        <option value="steam">Steam</option>
+        <option value="ebay">eBay</option>
+        <option value="walmart">Walmart</option>
+        <option value="vanilla gift card">Vanilla</option>
+      </select>
+
+      <label for="balanceCode">Enter or Upload Code:</label>
+      <input type="text" id="balanceCode" placeholder="Enter code manually"/>
+      <input type="file" id="balanceInput" accept="image/*"/>
+      <button class="action" onclick="checkBalance()">💳 Check Balance</button>
+      <div id="balanceResult" class="result-box"></div>
+    </div>
+  </div>
+
+  <!-- Help & Support Tab -->
+  <div id="help" class="tab">
+    <div class="card">
+      <div>Help & Support</div>
+      <p>If your card code is unreadable, contact the issuer with the card photo and purchase receipt.</p>
+      <ul>
+        <li><a href="https://support.apple.com/en-us/HT201209" target="_blank">Apple Gift Card Support</a></li>
+        <li><a href="https://www.amazon.com/gc/balance" target="_blank">Amazon Balance Checker</a></li>
+        <li><a href="https://support.google.com/googleplay/answer/3422659" target="_blank">Google Play Help</a></li>
+        <li><a href="https://support.xbox.com/help/subscriptions-billing/redeem-codes-gifting/redeem-prepaid-codes" target="_blank">Xbox Help</a></li>
+        <li><a href="https://www.playstation.com/en-us/support/store/redeem-ps-store-voucher-code/" target="_blank">PlayStation Help</a></li>
+        <li><a href="https://help.steampowered.com/en/faqs/view/6A32-08B6-13EB-56D3" target="_blank">Steam Help</a></li>
+        <li><a href="https://www.ebay.com/help/buying/paying-items/paying-gift-cards?id=4759" target="_blank">eBay Gift Card Help</a></li>
+        <li><a href="https://www.walmart.com/help/article/walmart-gift-cards/0fbd53a4a6dd4a82b6f62f50ea485db4" target="_blank">Walmart Gift Card Help</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- JS + OCR -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script>
+    // Tab switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // OCR Scan Damaged
+    async function scanCard() {
+      const file = document.getElementById("scanInput").files[0];
+      if (!file) {
+        alert("Please upload an image first.");
+        return;
+      }
+      document.getElementById("scanResult").innerText = "Processing... please wait";
+      const result = await Tesseract.recognize(file, 'eng');
+      document.getElementById("scanResult").innerText = "Detected Code: " + result.data.text.trim();
+    }
+
+    // Balance Check
+    async function checkBalance() {
+      const file = document.getElementById("balanceInput").files[0];
+      const codeInput = document.getElementById("balanceCode").value.trim();
+      let code = codeInput;
+
+      if (file) {
+        document.getElementById("balanceResult").innerText = "Scanning code...";
+        const result = await Tesseract.recognize(file, 'eng');
+        code = result.data.text.trim();
+      }
+
+      if (!code) {
+        document.getElementById("balanceResult").innerText = "Please enter or upload a code.";
+        return;
+      }
+
+      const type = document.getElementById("cardType").value;
+      let url = "";
+
+      switch(type) {
+        case "amazon": url = "https://www.amazon.com/gc/balance"; break;
+        case "itunes": url = "https://support.apple.com/en-us/HT201209"; break;
+        case "google": url = "https://play.google.com/redeem"; break;
+        case "xbox": url = "https://redeem.microsoft.com/"; break;
+        case "playstation": url = "https://store.playstation.com/redeem"; break;
+        case "steam": url = "https://store.steampowered.com/account/redeemwalletcode"; break;
+        case "ebay": url = "https://www.ebay.com/gft/balance"; break;
+        case "walmart": url = "https://www.walmart.com/account/giftcards/balance"; break;
+      }
+
+      document.getElementById("balanceResult").innerHTML = `
+        Code: <b>${code}</b><br>
+        <a href="${url}" target="_blank">🔗 Check balance on ${type.charAt(0).toUpperCase()+type.slice(1)}</a>
+      `;
+    }
+  </script>
+</body>
+</html>
