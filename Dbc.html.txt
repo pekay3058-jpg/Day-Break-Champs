@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>DBC — Day Break Champs</title>
+
+<!-- Neon font for headings -->
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --neon1: #ff4d6d;
+    --neon2: #ffae42;
+    --accent: #00f0ff;
+    --bg-dark: #11021a;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial, sans-serif;background:linear-gradient(135deg,#2a0636,#24104a 40%,#0b3b6f 100%);color:#fff}
+  /* paw-prints overlay (subtle & neon glow) */
+  body::before{
+    content:"";
+    position:fixed;inset:0;z-index:0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'><g fill='%23ffffff' fill-opacity='0.08'><ellipse cx='28' cy='26' rx='9' ry='12'/><ellipse cx='48' cy='26' rx='9' ry='12'/><ellipse cx='68' cy='41' rx='9' ry='12'/><ellipse cx='45' cy='66' rx='16' ry='10'/></g></svg>");
+    background-repeat: repeat;
+    background-size: 140px 140px;
+    filter: drop-shadow(0 0 6px rgba(255,77,109,0.35)) drop-shadow(0 0 12px rgba(255,174,66,0.2));
+    mix-blend-mode: screen; opacity:0.12;
+    animation: pawDrift 40s linear infinite;
+  }
+  @keyframes pawDrift { from { background-position: 0 0 } to { background-position: 400px 800px } }
+
+  /* App layout */
+  .container{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column}
+  header{display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid rgba(255,255,255,0.03)}
+  .brand-title{display:flex;flex-direction:column}
+  .brand-title .main{font-family:'Orbitron',sans-serif;font-weight:800;letter-spacing:1px;color:var(--accent);text-shadow:0 0 8px rgba(0,240,255,0.12);font-size:20px}
+  .brand-title .sub{font-size:12px;color:rgba(255,255,255,0.75)}
+
+  nav{display:flex;gap:10px}
+  nav a{color:inherit;text-decoration:none;padding:8px 12px;border-radius:8px;transition:all .18s;font-weight:700}
+  nav a:hover{transform:translateY(-2px)}
+  nav a.active{background:linear-gradient(90deg,var(--neon1),var(--neon2));color:#14030b}
+
+  main{flex:1;max-width:1100px;margin:28px auto;padding:0 18px;z-index:1}
+  .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);box-shadow:0 10px 40px rgba(0,0,0,0.6)}
+  h1,h2{font-family:'Orbitron',sans-serif;margin:0 0 8px 0}
+  h1{color:var(--accent);text-shadow:0 0 10px rgba(0,240,255,0.08)}
+  .small{color:rgba(255,255,255,0.78);font-size:13px}
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+  input[type="text"], select, textarea{padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit;width:100%;min-width:180px}
+  button.btn{padding:10px 14px;border-radius:10px;border:none;cursor:pointer;background:linear-gradient(90deg,var(--neon1),var(--neon2));color:#14030b;font-weight:800}
+  .muted{color:rgba(255,255,255,0.6);font-size:13px}
+
+  /* layout helpers */
+  .grid{display:grid;gap:14px}
+  .grid.cols-2{grid-template-columns:1fr 360px}
+  .inline{display:flex;gap:8px;align-items:center}
+  .result{margin-top:12px;padding:12px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.03)}
+
+  /* history list */
+  .history-list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+  .history-item{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px;background:rgba(255,255,255,0.02)}
+  .history-item .left{font-weight:700}
+  .history-item .meta{color:rgba(255,255,255,0.6);font-size:12px}
+
+  /* small responsive tweaks */
+  @media (max-width:880px){ .grid.cols-2{grid-template-columns:1fr} nav{overflow:auto} header{padding:12px} main{padding:0 12px} }
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand-title">
+        <div class="main">DBC</div>
+        <div class="sub">Day Break Champs — Fix codes • Check balances</div>
+      </div>
+
+      <nav id="nav">
+        <a href="#" data-page="home" class="active">Home</a>
+        <a href="#" data-page="fix">Fix Code</a>
+        <a href="#" data-page="check">Check Balance</a>
+        <a href="#" data-page="history">History</a>
+        <a href="#" data-page="help">Help</a>
+      </nav>
+    </header>
+
+    <main>
+      <!-- HOME -->
+      <section id="page-home" class="card">
+        <h1>Welcome to DBC</h1>
+        <p class="small">Fast utility to repair scratched gift card codes and check balances locally. No external services required.</p>
+        <div style="margin-top:14px" class="grid cols-2">
+          <div class="card">
+            <h2 class="small">Quick Actions</h2>
+            <div style="margin-top:8px" class="inline">
+              <button class="btn" data-nav="fix">Fix a code</button>
+              <button class="btn" data-nav="check">Check a balance</button>
+            </div>
+            <p class="muted" style="margin-top:10px">Tip: Use <code>?</code> for unknown characters when you have a scratched code (the fixer can propose candidates).</p>
+          </div>
+
+          <div class="card">
+            <h2 class="small">Notes</h2>
+            <ul class="small" style="margin-top:8px">
+              <li>History is stored locally in your browser (private to you).</li>
+              <li>You can export history to a text file for safekeeping.</li>
+              <li>No accounts, no external uploads.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- FIX CODE -->
+      <section id="page-fix" class="card" style="display:none">
+        <h2>Fix Scratched Code</h2>
+        <p class="small">Type the code exactly as you see it. Use <code>?</code> for unknown characters. If you use <code>?</code>, DBC will try to generate likely candidates (digits only) — limited to avoid explosion.</p>
+
+        <div style="margin-top:12px">
+          <label class="muted">Scratched code</label>
+          <input type="text" id="fix-input" placeholder="e.g. 12?5-AB??-C8D9" />
+        </div>
+
+        <div class="controls">
+          <button class="btn" id="fix-suggest">Suggest Candidates</button>
+          <button class="btn" id="fix-clean">Clean (replace invalid chars)</button>
+          <button class="btn" id="fix-clear">Clear</button>
+        </div>
+
+        <div id="fix-candidates" class="result" style="margin-top:14px;display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="small">Candidates <span id="cand-count"></span></div>
+            <div><button class="btn" id="save-selected">Save Selected to History</button></div>
+          </div>
+          <div id="cand-list" style="margin-top:10px;max-height:320px;overflow:auto"></div>
+        </div>
+
+        <div id="fix-selected" class="result" style="display:none;margin-top:12px">
+          <div class="small">Selected</div>
+          <div id="selected-code" style="font-weight:800;margin-top:6px"></div>
+        </div>
+      </section>
+
+      <!-- CHECK BALANCE -->
+      <section id="page-check" class="card" style="display:none">
+        <h2>Check Balance</h2>
+        <p class="small">Select provider then enter card code. Uses local sample data (replace with real API later if needed).</p>
+
+        <div style="margin-top:12px">
+          <label class="muted">Provider</label>
+          <select id="provider-select">
+            <option value="amazon">Amazon</option>
+            <option value="itunes">iTunes</option>
+            <option value="visa">Visa</option>
+          </select>
+        </div>
+
+        <div style="margin-top:10px">
+          <label class="muted">Card Code</label>
+          <input type="text" id="balance-input" placeholder="e.g. AMZ123 or 1111-2222-3333-4444" />
+        </div>
+
+        <div class="controls">
+          <button class="btn" id="check-btn">Check</button>
+          <button class="btn" id="clear-check">Clear</button>
+        </div>
+
+        <div id="balance-result" class="result" style="display:none;margin-top:12px"></div>
+      </section>
+
+      <!-- HISTORY -->
+      <section id="page-history" class="card" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <h2>History</h2>
+          <div style="display:flex;gap:8px">
+            <button class="btn" id="export-history">Export History</button>
+            <button class="btn" id="clear-history">Clear</button>
+          </div>
+        </div>
+
+        <div id="history-list" class="history-list" style="margin-top:12px"></div>
+      </section>
+
+      <!-- HELP -->
+      <section id="page-help" class="card" style="display:none">
+        <h2>Help</h2>
+        <p class="small">How to use DBC:</p>
+        <ol class="small">
+          <li>Go to <strong>Fix Code</strong> and type your scratched code. Use <code>?</code> for unknown characters. Use Suggest to get likely numeric candidates (if there are few <code>?</code>).</li>
+          <li>Go to <strong>Check Balance</strong>, choose provider and enter the card code to see balance (sample data built-in).</li>
+          <li>Saved items appear in <strong>History</strong>. Use Export to download a text record.</li>
+        </ol>
+      </section>
+    </main>
+
+    <footer style="text-align:center;padding:14px 8px;color:rgba(255,255,255,0.6)">© <span id="year"></span> DBC — Day Break Champs</footer>
+  </div>
+
+<script>
+(() => {
+  // --- initial setup ---
+  document.getElementById('year').innerText = new Date().getFullYear();
+
+  // navigation handling
+  const navLinks = document.querySelectorAll('#nav a');
+  navLinks.forEach(a => {
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      const page = a.dataset.page;
+      showPage(page);
+    });
+  });
+
+  // quick action buttons (home)
+  document.querySelectorAll('[data-nav]').forEach(btn => {
+    btn.addEventListener('click', () => showPage(btn.dataset.nav));
+  });
+
+  function showPage(id){
+    // hide all sections
+    document.querySelectorAll('main section').forEach(s => s.style.display = 'none');
+    // show target
+    const target = document.getElementById('page-' + id);
+    if (target) target.style.display = 'block';
+    // active nav styling
+    navLinks.forEach(a => a.classList.toggle('active', a.dataset.page === id));
+    // special actions
+    if (id === 'history') loadHistoryUI();
+  }
+
+  // default page
+  showPage('home');
+
+  // --------------------------
+  // History utilities (localStorage)
+  // --------------------------
+  const HISTORY_KEY = 'dbc_history_v2';
+
+  function loadHistory() {
+    try {
+      return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    } catch {
+      return [];
+    }
+  }
+  function saveHistory(entry) {
+    const items = loadHistory();
+    items.unshift(entry);
+    // cap at 1000 entries
+    if(items.length > 1000) items.length = 1000;
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(items));
+  }
+  function clearHistory() { localStorage.removeItem(HISTORY_KEY); }
+
+  function loadHistoryUI() {
+    const listEl = document.getElementById('history-list');
+    listEl.innerHTML = '';
+    const items = loadHistory();
+    if (items.length === 0) {
+      listEl.innerHTML = '<div class="muted">No history yet.</div>';
+      return;
+    }
+    items.forEach((it, idx) => {
+      const div = document.createElement('div');
+      div.className = 'history-item';
+      const left = document.createElement('div');
+      left.className = 'left';
+      left.textContent = (it.type || 'entry') + ': ' + (it.info || '');
+      const right = document.createElement('div');
+      right.className = 'meta';
+      right.textContent = new Date(it.at).toLocaleString();
+      div.appendChild(left); div.appendChild(right);
+      listEl.appendChild(div);
+    });
+  }
+
+  // export history
+  document.getElementById('export-history').addEventListener('click', () => {
+    const items = loadHistory();
+    if (!items.length) { alert('No history to export'); return; }
+    const text = items.map(it => `[${new Date(it.at).toLocaleString()}] ${it.type}: ${it.info}`).join('\n');
+    const blob = new Blob([text], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'dbc-history.txt';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  document.getElementById('clear-history').addEventListener('click', () => {
+    if (!confirm('Clear history? This cannot be undone.')) return;
+    clearHistory();
+    loadHistoryUI();
+  });
+
+  // ---------------------------------------
+  // Fix Code: cleaning and candidate generation
+  // ---------------------------------------
+  const fixInput = document.getElementById('fix-input');
+  const fixSuggestBtn = document.getElementById('fix-suggest');
+  const fixCleanBtn = document.getElementById('fix-clean');
+  const fixClearBtn = document.getElementById('fix-clear');
+  const candListEl = document.getElementById('cand-list');
+  const candBlock = document.getElementById('fix-candidates');
+  const candCountEl = document.getElementById('cand-count');
+  const selectedBlock = document.getElementById('fix-selected');
+  const selectedCodeEl = document.getElementById('selected-code');
+  const saveSelectedBtn = document.getElementById('save-selected');
+
+  let currentCandidates = [];
+  let currentSelected = null;
+
+  // helper: sanitize input but keep ? and - and letters/numbers
+  function normalizePattern(s){
+    return (s || '').toUpperCase().trim().replace(/[^0-9A-Z\-\?]/g,'');
+  }
+
+  // generate candidates by replacing ? with digits 0-9 (avoid explosion)
+  function generateCandidates(pattern){
+    const qCount = (pattern.match(/\?/g) || []).length;
+    if (qCount === 0) return [pattern];
+    if (qCount > 4) {
+      alert('Too many unknowns (more than 4). Reduce the number of ? characters.');
+      return [];
+    }
+    const charset = '0123456789';
+    const slots = pattern.split('');
+    const results = [];
+    function walk(i, acc) {
+      if (i === slots.length) { results.push(acc); return; }
+      const ch = slots[i];
+      if (ch === '?') {
+        for (let c of charset) {
+          walk(i+1, acc + c);
+          if (results.length > 500) return; // safety cap
+        }
+      } else {
+        walk(i+1, acc + ch);
+      }
+    }
+    walk(0, '');
+    return results.slice(0, 500);
+  }
+
+  function renderCandidates(list){
+    candListEl.innerHTML = '';
+    if (!list.length) {
+      candListEl.innerHTML = '<div class="muted">No candidates (try cleaning input or reduce unknowns).</div>';
+      candCountEl.textContent = '(0)';
+      candBlock.style.display = 'none';
+      return;
+    }
+    candBlock.style.display = 'block';
+    candCountEl.textContent = '(' + list.length + ')';
+    list.forEach((c, i) => {
+      const row = document.createElement('div');
+      row.style.display = 'flex'; row.style.justifyContent='space-between'; row.style.alignItems='center';
+      row.style.padding = '8px'; row.style.borderRadius='8px'; row.style.marginBottom='6px';
+      row.style.background = (i===0) ? 'linear-gradient(90deg,var(--neon1),var(--neon2))' : 'transparent';
+      const left = document.createElement('div'); left.style.fontWeight = (i===0)?800:600; left.textContent = c;
+      const right = document.createElement('div');
+      const selectBtn = document.createElement('button'); selectBtn.className='btn'; selectBtn.style.padding='6px 10px'; selectBtn.textContent='Select';
+      selectBtn.addEventListener('click', () => {
+        currentSelected = c;
+        selectedCodeEl.textContent = c;
+        selectedBlock.style.display = 'block';
+      });
+      right.appendChild(selectBtn);
+      row.appendChild(left); row.appendChild(right);
+      candListEl.appendChild(row);
+    });
+  }
+
+  fixSuggestBtn.addEventListener('click', (e) => {
+    const pattern = normalizePattern(fixInput.value);
+    if (!pattern) { alert('Enter the scratched code first'); return; }
+    const list = generateCandidates(pattern);
+    currentCandidates = list;
+    renderCandidates(list);
+  });
+
+  fixCleanBtn.addEventListener('click', () => {
+    const cleaned = normalizePattern(fixInput.value).replace(/\?/g,'_').replace(/[^0-9A-Z\-]/g,'').toUpperCase();
+    // alternative: replace invalid with X
+    const replaced = (fixInput.value || '').toUpperCase().replace(/[^0-9A-Z\-\?]/g,'X');
+    fixInput.value = replaced;
+    document.getElementById('fixedResult').textContent = 'Cleaned: ' + replaced;
+    // save it briefly to history
+    saveHistory({ type: 'fix-clean', info: replaced, at: Date.now() });
+    // reset candidate block
+    currentCandidates = [];
+    candBlock.style.display = 'none';
+    selectedBlock.style.display = 'none';
+  });
+
+  fixClearBtn.addEventListener('click', () => {
+    fixInput.value = '';
+    candListEl.innerHTML = ''; candBlock.style.display = 'none'; selectedBlock.style.display = 'none'; currentCandidates = []; currentSelected = null;
+  });
+
+  saveSelectedBtn.addEventListener('click', () => {
+    if (!currentSelected && selectedCodeEl.innerText) currentSelected = selectedCodeEl.innerText;
+    if (!currentSelected) { alert('No code selected'); return; }
+    saveHistory({ type: 'fix-selected', info: currentSelected, at: Date.now() });
+    alert('Saved to history');
+  });
+
+  // ---------------------------
+  // Balance checker (sample data)
+  // ---------------------------
+  const sampleBalances = {
+    amazon: { 'AMZ123': 50.00, 'AMZ999': 100.00, 'AMZ321': 12.50 },
+    itunes: { 'ITN456': 25.00, 'ITN888': 75.00 },
+    visa: { 'VISA111': 500.00, 'VISA222': 1000.00, '1111-2222-3333-4444': 50.00 }
+  };
+
+  const checkBtn = document.getElementById('check-btn');
+  const clearCheckBtn = document.getElementById('clear-check');
+  const providerSelect = document.getElementById('provider-select');
+  const balanceInput = document.getElementById('balance-input');
+  const balanceResult = document.getElementById('balance-result');
+
+  checkBtn.addEventListener('click', () => {
+    const prov = providerSelect.value;
+    const code = (balanceInput.value || '').trim().toUpperCase();
+    if (!code) { alert('Enter a card code'); return; }
+    const providerData = sampleBalances[prov] || {};
+    const found = providerData[code];
+    if (found !== undefined) {
+      balanceResult.style.display = 'block';
+      balanceResult.innerHTML = `<div style="font-weight:800">${prov.toUpperCase()} — Balance: $${Number(found).toFixed(2)}</div>`;
+      saveHistory({ type: prov + ' check', info: code + ' → $' + Number(found).toFixed(2), at: Date.now() });
+    } else {
+      balanceResult.style.display = 'block';
+      balanceResult.innerHTML = `<div style="color:#ffb4b4;font-weight:700">Not found or invalid code</div>`;
+      saveHistory({ type: prov + ' check', info: code + ' → Not found', at: Date.now() });
+    }
+  });
+
+  clearCheckBtn.addEventListener('click', () => {
+    balanceInput.value = ''; balanceResult.style.display = 'none';
+  });
+
+  // load history when history page shown or on start
+  function initLoad() {
+    // wire nav links to show pages also when clicking header nav
+    document.querySelectorAll('#nav a').forEach(a => {
+      a.addEventListener('click', (ev) => { ev.preventDefault(); showPage(a.dataset.page); });
+    });
+  }
+
+  // initial init
+  initLoad();
+
+  // ensure history UI is updated when history page is shown:
+  const observer = new MutationObserver(() => {
+    // no-op placeholder (we handle manually)
+  });
+
+  // expose showPage to outer scope for quick action buttons
+  window.showPage = (id) => {
+    // hide all
+    document.querySelectorAll('main section').forEach(s => s.style.display = 'none');
+    // show target
+    const el = document.getElementById('page-' + id);
+    if (el) el.style.display = 'block';
+    // set active nav
+    document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('active', a.dataset.page === id));
+    if (id === 'history') loadHistoryUI();
+  };
+
+  // ensure history UI is ready when loaded
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    // nothing else needed
+  } else {
+    window.addEventListener('DOMContentLoaded', () => {});
+  }
+
+  // load history UI on startup if user lands on history
+  if (window.location.hash === '#history') showPage('history');
+
+})(); // end IIFE
+</script>
+</body>
+</html>
